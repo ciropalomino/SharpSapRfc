@@ -1,6 +1,7 @@
 ﻿using SharpSapRfc.Structure;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace SharpSapRfc
 {
@@ -44,9 +45,41 @@ namespace SharpSapRfc
             for (int i = 0; i < where.Length; i++)
                 dbWhere.Add(new RfcDbWhere(where[i]));
 
-            var result = this.ExecuteFunction("RFC_READ_TABLE", new
+            var result = this.ExecuteFunction("BBP_RFC_READ_TABLE", new
             {
                 Query_Table = tableName,
+                Fields = dbFields,
+                Options = dbWhere,
+                RowSkips = skip,
+                RowCount = count
+            });
+
+            return this.GetStructureMapper().FromRfcReadTableToList<T>(
+                result.GetTable<Tab512>("DATA"),
+                result.GetTable<RfcDbField>("FIELDS")
+            );
+        }
+
+        public IEnumerable<T> ReadTableStatic<T>(string[] where = null, int skip = 0, int count = 0)
+        {
+            PropertyInfo[] columns = typeof(T).GetProperties();
+
+            where = where ?? new string[0];
+
+            List<RfcDbField> dbFields = new List<RfcDbField>();
+            foreach (var f in columns)
+            {
+                dbFields.Add(new RfcDbField(f.Name));
+            }
+
+
+            List<RfcDbWhere> dbWhere = new List<RfcDbWhere>();
+            for (int i = 0; i < where.Length; i++)
+                dbWhere.Add(new RfcDbWhere(where[i]));
+
+            var result = this.ExecuteFunction("BBP_RFC_READ_TABLE", new
+            {
+                Query_Table = typeof(T).Name,
                 Fields = dbFields,
                 Options = dbWhere,
                 RowSkips = skip,

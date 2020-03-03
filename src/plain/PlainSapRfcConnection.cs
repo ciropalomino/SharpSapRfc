@@ -28,12 +28,23 @@ namespace SharpSapRfc.Plain
             this.structureMapper = new PlainRfcStructureMapper(new PlainRfcValueMapper());
         }
 
+        public PlainSapRfcConnection(RfcDestination destinationName)
+        {
+            this.destination = destinationName;
+            this.structureMapper = new PlainRfcStructureMapper(new PlainRfcValueMapper());
+            isDestination = true;
+        }
+
         private void EnsureConnectionIsOpen()
         {
             if (!isOpen)
             {
-                try { 
-                    this.destination = RfcDestinationManager.GetDestination(destinationName);
+                try
+                {
+                    if (!isDestination)
+                    {
+                        this.destination = RfcDestinationManager.GetDestination(destinationName);
+                    }
                     this.repository = this.destination.Repository;
                     this.isOpen = true;
                 }
@@ -57,6 +68,7 @@ namespace SharpSapRfc.Plain
 
         private string destinationName;
         private bool isOpen = false;
+        private bool isDestination = false;
         private RfcRepository repository;
         private RfcDestination destination;
         private PlainRfcStructureMapper structureMapper;
